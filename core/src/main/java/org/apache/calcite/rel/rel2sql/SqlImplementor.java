@@ -16,6 +16,7 @@
  */
 package org.apache.calcite.rel.rel2sql;
 
+import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -50,6 +51,7 @@ import org.apache.calcite.sql.SqlDynamicParam;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
@@ -574,6 +576,10 @@ public abstract class SqlImplementor {
           return SqlLiteral.createTimestamp(
               literal.getValueAs(TimestampString.class),
               literal.getType().getPrecision(), POS);
+        case INTERVAL_YEAR_MONTH:
+        case INTERVAL_DAY_TIME:
+          return createInterval(literal);
+        case BINARY:
         case ANY:
         case NULL:
           switch (literal.getTypeName()) {
@@ -763,6 +769,46 @@ public abstract class SqlImplementor {
 
       throw new AssertionError("Unsupported Window bound: "
           + rexWindowBound);
+    }
+
+    private SqlNode createInterval(final RexLiteral interval) {
+      final BigDecimal intervalValue = (BigDecimal) interval.getValue();
+      final SqlTypeFamily family = interval.getTypeName().getFamily();
+      final SqlIntervalQualifier qualifier = interval.getType().getIntervalQualifier();
+
+      if (intervalValue == null) {
+        return null;
+      }
+
+      final TimeUnit unit;
+      if (qualifier.getEndUnit() != null) {
+        unit = qualifier.getEndUnit();
+      } else {
+        unit = qualifier.getStartUnit();
+      }
+
+      switch (unit) {
+      case YEAR:
+      case MONTH:
+        assert family == SqlTypeFamily.INTERVAL_YEAR_MONTH;
+        break;
+      case DAY:
+      case HOUR:
+      case MINUTE:
+      case SECOND:
+      case MILLISECOND:
+        assert family == SqlTypeFamily.INTERVAL_DAY_TIME;
+        break;
+      default:
+        throw new IllegalArgumentException("Interval not supported for " + unit);
+      }
+      final BigDecimal newIntervalValue = intervalValue.divide(unit.multiplier);
+
+      return SqlLiteral.createInterval(
+          intervalValue.signum() < 0 ? -1 : 1,
+          newIntervalValue.toString(),
+          new SqlIntervalQualifier(unit, null, qualifier.getParserPosition()),
+          qualifier.getParserPosition());
     }
 
     private SqlNode createLeftCall(SqlOperator op, List<SqlNode> nodeList) {

@@ -2775,6 +2775,34 @@ public abstract class SqlOperatorBaseTest {
         "DATE NOT NULL");
   }
 
+  @Test public void testMinusTimestampTimestampOperator() {
+    tester.setFor(SqlStdOperatorTable.MINUS);
+    tester.checkScalar(
+        "(timestamp '2004-05-01 12:03:34' - timestamp '2004-04-29 11:57:23')",
+        "+2 00:06:11.000000",
+        "INTERVAL DAY TO SECOND NOT NULL");
+    tester.checkScalar(
+        "timestamp '2004-04-29 11:57:23' - timestamp '2004-05-01 12:03:34'",
+        "-2 00:06:11.000000",
+        "INTERVAL DAY TO SECOND NOT NULL");
+  }
+
+  @Test public void testMinusDateDateOperator() {
+    tester.setFor(SqlStdOperatorTable.MINUS);
+    tester.checkScalar(
+        "(date '2004-05-01' - date '2004-04-29')",
+        "+2",
+        "INTERVAL DAY NOT NULL");
+    tester.checkScalar(
+        "date '2004-04-29' - date '2004-05-01'",
+        "-2",
+        "INTERVAL DAY NOT NULL");
+    tester.checkScalar(
+        "(date '2004-05-01' - date '2003-04-29')",
+        "+368",
+        "INTERVAL DAY NOT NULL");
+  }
+
   @Test public void testMinusDateOperator() {
     tester.setFor(SqlStdOperatorTable.MINUS_DATE);
     tester.checkScalar(
@@ -2797,10 +2825,6 @@ public abstract class SqlOperatorBaseTest {
         "(timestamp '2004-05-01 12:03:34' - timestamp '2004-04-29 11:57:23') day to hour",
         "+2 00",
         "INTERVAL DAY TO HOUR NOT NULL");
-    tester.checkScalar(
-        "(date '2004-12-02' - date '2003-12-01') day",
-        "+367",
-        "INTERVAL DAY NOT NULL");
     tester.checkNull(
         "(cast(null as date) - date '2003-12-01') day");
 
@@ -2811,14 +2835,6 @@ public abstract class SqlOperatorBaseTest {
             + "  timestamp '1969-04-29 0:0:0') day to second / 2",
         "1988-12-06 07:44:00",
         "TIMESTAMP(0) NOT NULL");
-
-    tester.checkScalar(
-        "date '1969-04-29' +"
-            + " (date '2008-07-15' - "
-            + "  date '1969-04-29') day / 2",
-        "1988-12-06",
-        "DATE NOT NULL");
-
     tester.checkScalar(
         "time '01:23:44' +"
             + " (time '15:28:00' - "
@@ -2833,6 +2849,21 @@ public abstract class SqlOperatorBaseTest {
               + "  date '1969-04-29') day / 2) is not null",
           Boolean.TRUE);
     }
+
+    if (!enable) {
+      return;
+    }
+    tester.checkScalar(
+        "(date '2004-12-02' - date '2003-12-01') day",
+        "+367",
+        "INTERVAL DAY NOT NULL");
+    tester.checkScalar(
+        "date '1969-04-29' +"
+            + " (date '2008-07-15' - "
+            + "  date '1969-04-29') day / 2",
+        "1988-12-06",
+        "DATE NOT NULL");
+
     // TODO: Add tests for year month intervals (currently not supported)
   }
 
@@ -5942,6 +5973,62 @@ public abstract class SqlOperatorBaseTest {
         "INTERVAL YEAR TO MONTH NOT NULL");
     tester.checkNull(
         "floor(cast(null as interval year))");
+  }
+
+  @Test public void testTimestampDateCompare() {
+    tester.setFor(SqlStdOperatorTable.LESS_THAN);
+    tester.checkScalar(
+        "timestamp '2016-02-24 12:42:25' < date '2016-2-25'",
+        "true",
+        "BOOLEAN NOT NULL");
+    tester.checkScalar(
+        "date '2008-2-23' < timestamp '2016-02-24 12:42:25'",
+        "true",
+        "BOOLEAN NOT NULL");
+
+    tester.setFor(SqlStdOperatorTable.LESS_THAN_OR_EQUAL);
+    tester.checkScalar(
+        "timestamp '2016-02-24 12:42:25' <= date '2016-02-24'",
+        "false",
+        "BOOLEAN NOT NULL");
+    tester.checkScalar(
+        "date '2016-02-24' <= timestamp '2016-02-24 12:42:25'",
+        "true",
+        "BOOLEAN NOT NULL");
+
+    tester.setFor(SqlStdOperatorTable.EQUALS);
+    tester.checkScalar(
+        "timestamp '2016-02-24 12:42:25' = date '2016-02-24'",
+        "false",
+        "BOOLEAN NOT NULL");
+    tester.checkScalar(
+        "date '2016-02-24' = timestamp '2016-02-24 12:42:25'",
+        "false",
+        "BOOLEAN NOT NULL");
+    tester.checkScalar(
+        "date '2016-02-24' = timestamp '2016-02-24 00:00:00'",
+        "true",
+        "BOOLEAN NOT NULL");
+
+    tester.setFor(SqlStdOperatorTable.GREATER_THAN);
+    tester.checkScalar(
+        "timestamp '2016-02-24 12:42:25' > date '2016-2-25'",
+        "false",
+        "BOOLEAN NOT NULL");
+    tester.checkScalar(
+        "date '2008-2-23' > timestamp '2016-02-24 12:42:25'",
+        "false",
+        "BOOLEAN NOT NULL");
+
+    tester.setFor(SqlStdOperatorTable.GREATER_THAN_OR_EQUAL);
+    tester.checkScalar(
+        "timestamp '2016-02-24 12:42:25' >= date '2016-02-24'",
+        "true",
+        "BOOLEAN NOT NULL");
+    tester.checkScalar(
+        "date '2016-02-24' >= timestamp '2016-02-24 12:42:25'",
+        "false",
+        "BOOLEAN NOT NULL");
   }
 
   @Test public void testTimestampAdd() {

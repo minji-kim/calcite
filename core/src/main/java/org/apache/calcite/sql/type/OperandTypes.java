@@ -455,6 +455,12 @@ public abstract class OperandTypes {
       family(SqlTypeFamily.DATETIME, SqlTypeFamily.DATETIME_INTERVAL,
           SqlTypeFamily.TIME);
 
+  public static final SqlSingleOperandTypeChecker TIMESTAMP_TIMESTAMP =
+      family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.TIMESTAMP);
+
+  public static final SqlSingleOperandTypeChecker DATE_DATE =
+      family(SqlTypeFamily.DATE, SqlTypeFamily.DATE);
+
   public static final SqlSingleOperandTypeChecker INTERVAL_DATETIME =
       family(SqlTypeFamily.DATETIME_INTERVAL, SqlTypeFamily.DATETIME);
 
@@ -482,7 +488,8 @@ public abstract class OperandTypes {
 
   public static final SqlSingleOperandTypeChecker MINUS_OPERATOR =
       // TODO:  compatibility check
-      OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_SAME_SAME, DATETIME_INTERVAL);
+      OperandTypes.or(NUMERIC_NUMERIC, INTERVAL_SAME_SAME, DATETIME_INTERVAL,
+          TIMESTAMP_TIMESTAMP, DATE_DATE);
 
   public static final SqlSingleOperandTypeChecker MINUS_DATE_OPERATOR =
       new FamilyOperandTypeChecker(

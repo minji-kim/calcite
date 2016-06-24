@@ -227,23 +227,31 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl {
     int nullableCount = 0;
     int javaCount = 0;
     int anyCount = 0;
+    int dateCount = 0;
+    int timestampCount = 0;
 
     for (RelDataType type : types) {
       final SqlTypeName typeName = type.getSqlTypeName();
       if (typeName == null) {
         return null;
       }
-      if (typeName == SqlTypeName.ANY) {
-        anyCount++;
-      }
       if (type.isNullable()) {
         ++nullableCount;
+      }
+      if (isJavaType(type)) {
+        ++javaCount;
+      }
+      if (typeName == SqlTypeName.ANY) {
+        anyCount++;
       }
       if (typeName == SqlTypeName.NULL) {
         ++nullCount;
       }
-      if (isJavaType(type)) {
-        ++javaCount;
+      if (typeName == SqlTypeName.DATE) {
+        ++dateCount;
+      }
+      if (typeName == SqlTypeName.TIMESTAMP) {
+        ++timestampCount;
       }
     }
 
@@ -251,6 +259,18 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl {
     if (anyCount > 0) {
       return createTypeWithNullability(createSqlType(SqlTypeName.ANY),
           nullCount > 0 || nullableCount > 0);
+    }
+
+    // Time is not comparable to date or timestamp, but date and timestamps are.
+    if ((dateCount > 0 || timestampCount > 0)
+        && (dateCount + timestampCount + nullCount) == types.size()) {
+      if (timestampCount == 0) {
+        return createTypeWithNullability(createSqlType(SqlTypeName.DATE),
+            nullCount > 0 || nullableCount > 0);
+      } else {
+        return createTypeWithNullability(createSqlType(SqlTypeName.TIMESTAMP),
+            nullCount > 0 || nullableCount > 0);
+      }
     }
 
     for (int i = 0; i < types.size(); ++i) {
@@ -285,6 +305,8 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl {
       SqlTypeName resultTypeName = resultType.getSqlTypeName();
 
       if (resultFamily != family) {
+        // if the two are in the time/timestamp/date family, then we should just
+        // convert all of them to timestamp.
         return null;
       }
       if (SqlTypeUtil.inCharOrBinaryFamilies(type)) {

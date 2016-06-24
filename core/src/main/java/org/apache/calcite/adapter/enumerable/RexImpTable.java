@@ -115,6 +115,7 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.CURRENT_TIME;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.CURRENT_TIMESTAMP;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.CURRENT_USER;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.CURRENT_VALUE;
+import static org.apache.calcite.sql.fun.SqlStdOperatorTable.DATETIME_MINUS;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.DATETIME_PLUS;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.DEFAULT;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.DEGREES;
@@ -316,6 +317,8 @@ public class RexImpTable {
 
     // datetime
     defineImplementor(DATETIME_PLUS, NullPolicy.STRICT,
+        new DatetimeArithmeticImplementor(), false);
+    defineImplementor(DATETIME_MINUS, NullPolicy.STRICT,
         new DatetimeArithmeticImplementor(), false);
     defineImplementor(MINUS_DATE, NullPolicy.STRICT,
         new DatetimeArithmeticImplementor(), false);

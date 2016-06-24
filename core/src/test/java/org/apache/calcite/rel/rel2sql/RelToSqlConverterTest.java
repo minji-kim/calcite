@@ -1898,6 +1898,163 @@ public class RelToSqlConverterTest {
     sql(sql).ok(expected);
   }
 
+  @Test public void testSelectQueryWithTimestampIntervalYearPlus() {
+    String query =
+        "select count(*), sum(\"employee_id\") from \"reserve_employee\" "
+            + "where \"hire_date\" <= timestamp '2015-01-01 00:00:00' + interval '2' year";
+    String expected =
+        "SELECT COUNT(*) AS \"EXPR$0\", SUM(\"employee_id\") AS \"EXPR$1\"\n"
+            + "FROM \"foodmart\".\"reserve_employee\"\n"
+            + "WHERE \"hire_date\" <= (TIMESTAMP '2015-01-01 00:00:00' + INTERVAL '2' YEAR)";
+    sql(query).ok(expected);
+  }
+
+  @Test
+  public void testMinusDateTime() {
+    final String query = "select  date '1998-12-01' - interval '90' day from \"employee\"";
+    final String expectedMSSql = "SELECT DATEADD(DAY, -90, '1998-12-01') AS [EXPR$0]\n"
+        + "FROM [foodmart].[employee]";
+    final String expectedDB2 = "SELECT (DATE '1998-12-01' - 90 DAY) AS EXPR$0\n"
+        + "FROM foodmart.employee AS employee";
+    sql(query)
+        .dialect(DatabaseProduct.MSSQL.getDialect()).ok(expectedMSSql)
+        .dialect(DatabaseProduct.DB2.getDialect()).ok(expectedDB2);
+  }
+
+  @Test
+  public void testPlusDateTimePlusDayl() {
+    final String query = "select \"hire_date\" + interval '90' day from \"employee\"";
+    final String expectedMSSql = "SELECT DATEADD(DAY, 90, [hire_date]) AS [EXPR$0]\n"
+        + "FROM [foodmart].[employee]";
+    final String expectedDB2 = "SELECT (employee.hire_date + 90 DAY) AS EXPR$0\n"
+        + "FROM foodmart.employee AS employee";
+    sql(query)
+        .dialect(DatabaseProduct.MSSQL.getDialect()).ok(expectedMSSql)
+        .dialect(DatabaseProduct.DB2.getDialect()).ok(expectedDB2);
+  }
+
+  @Test
+  public void testDateTimeMinusDayToSecond() {
+    final String query = "select \"hire_date\" + interval '-1 2:3:4' day to second "
+        + "from \"employee\"";
+    final String expectedMSSql = "SELECT DATEADD(SECOND, -93784, [hire_date]) AS [EXPR$0]\n"
+        + "FROM [foodmart].[employee]";
+    final String expectedDB2 = "SELECT (employee.hire_date + -93784 SECOND) AS EXPR$0\n"
+        + "FROM foodmart.employee AS employee";
+    sql(query)
+        .dialect(DatabaseProduct.MSSQL.getDialect()).ok(expectedMSSql)
+        .dialect(DatabaseProduct.DB2.getDialect()).ok(expectedDB2);
+  }
+
+  @Test
+  public void testDateTimeMinusDayToSecond2() {
+    final String query = "select \"hire_date\" - interval '1 2:3:4' day to second "
+        + "from \"employee\"";
+    final String expectedMSSql = "SELECT DATEADD(SECOND, -93784, [hire_date]) AS [EXPR$0]\n"
+        + "FROM [foodmart].[employee]";
+    final String expectedDB2 = "SELECT (employee.hire_date - 93784 SECOND) AS EXPR$0\n"
+        + "FROM foodmart.employee AS employee";
+    sql(query)
+        .dialect(DatabaseProduct.MSSQL.getDialect()).ok(expectedMSSql)
+        .dialect(DatabaseProduct.DB2.getDialect()).ok(expectedDB2);
+  }
+
+  @Test
+  public void testDateTimePlusDayToSecond() {
+    final String query = "select \"hire_date\" + interval '1 2:3:4' day to second "
+        + "from \"employee\"";
+    final String expectedMSSql = "SELECT DATEADD(SECOND, 93784, [hire_date]) AS [EXPR$0]\n"
+        + "FROM [foodmart].[employee]";
+    final String expectedDB2 = "SELECT (employee.hire_date + 93784 SECOND) AS EXPR$0\n"
+        + "FROM foodmart.employee AS employee";
+    sql(query)
+        .dialect(DatabaseProduct.MSSQL.getDialect()).ok(expectedMSSql)
+        .dialect(DatabaseProduct.DB2.getDialect()).ok(expectedDB2);
+  }
+
+  @Test
+  public void testCastToTimestampdMSSql() {
+    final String query = "select cast(\"hire_date\" as timestamp) from \"employee\"";
+    final String expected = "SELECT CAST([hire_date] AS [DATETIME]) AS [EXPR$0]\n"
+        + "FROM [foodmart].[employee]";
+    sql(query).dialect(DatabaseProduct.MSSQL.getDialect()).ok(expected);
+  }
+
+  @Test
+  public void testCastToDateMSSql() {
+    String query = "select cast(\"birthdate\" as DATE) from\"customer\"";
+    final String expected =
+        "SELECT CAST([birthdate] AS DATE) AS [EXPR$0]\nFROM [foodmart].[customer]";
+    sql(query).dialect(DatabaseProduct.MSSQL.getDialect()).ok(expected);
+  }
+
+  @Test public void testSelectQueryWithTimestampIntervalYear() {
+    String query =
+        "select count(*), sum(\"employee_id\") from \"reserve_employee\" "
+            + "where \"hire_date\" <= timestamp '2015-01-01 00:00:00' - interval '2' year";
+    String expected =
+        "SELECT COUNT(*) AS \"EXPR$0\", SUM(\"employee_id\") AS \"EXPR$1\"\n"
+            + "FROM \"foodmart\".\"reserve_employee\"\n"
+            + "WHERE \"hire_date\" <= (TIMESTAMP '2015-01-01 00:00:00' - INTERVAL '2' YEAR)";
+    sql(query).ok(expected);
+  }
+
+
+  @Test public void testSelectQueryWithTimestampIntervalMonth() {
+    String query =
+        "select count(*), sum(\"employee_id\") from \"reserve_employee\" "
+            + "where \"hire_date\" <= timestamp '2015-01-01 00:00:00' - interval '2' month";
+    String expected =
+        "SELECT COUNT(*) AS \"EXPR$0\", SUM(\"employee_id\") AS \"EXPR$1\"\n"
+            + "FROM \"foodmart\".\"reserve_employee\"\n"
+            + "WHERE \"hire_date\" <= (TIMESTAMP '2015-01-01 00:00:00' - INTERVAL '2' MONTH)";
+    sql(query).ok(expected);
+  }
+
+  @Test public void testSelectQueryWithTimestampIntervalMinute() {
+    String query =
+        "select count(*), sum(\"employee_id\") from \"reserve_employee\" "
+            + "where \"hire_date\" <= timestamp '2015-01-01 00:00:00' - interval '2' minute";
+    String expected =
+        "SELECT COUNT(*) AS \"EXPR$0\", SUM(\"employee_id\") AS \"EXPR$1\"\n"
+            + "FROM \"foodmart\".\"reserve_employee\"\n"
+            + "WHERE \"hire_date\" <= (TIMESTAMP '2015-01-01 00:00:00' - INTERVAL '2' MINUTE)";
+    sql(query).ok(expected);
+  }
+
+  @Test public void testSelectQueryWithDateIntervalYear() {
+    String query =
+        "select count(*), sum(\"employee_id\") from \"reserve_employee\" "
+            + "where cast(\"hire_date\" as date) <= date '2015-01-01' - interval '2' year";
+    String expected =
+        "SELECT COUNT(*) AS \"EXPR$0\", SUM(\"employee_id\") AS \"EXPR$1\"\n"
+            + "FROM \"foodmart\".\"reserve_employee\"\n"
+            + "WHERE CAST(\"hire_date\" AS DATE) <= (DATE '2015-01-01' - INTERVAL '2' YEAR)";
+    sql(query).ok(expected);
+  }
+
+  @Test public void testSelectQueryWithDateIntervalMonth() {
+    String query =
+        "select count(*), sum(\"employee_id\") from \"reserve_employee\" "
+            + "where cast(\"hire_date\" as date) <= date '2015-01-01' - interval '2' month";
+    String expected =
+        "SELECT COUNT(*) AS \"EXPR$0\", SUM(\"employee_id\") AS \"EXPR$1\"\n"
+            + "FROM \"foodmart\".\"reserve_employee\"\n"
+            + "WHERE CAST(\"hire_date\" AS DATE) <= (DATE '2015-01-01' - INTERVAL '2' MONTH)";
+    sql(query).ok(expected);
+  }
+
+  @Test public void testSelectQueryWithDateIntervalMinute() {
+    String query =
+        "select count(*), sum(\"employee_id\") from \"reserve_employee\" "
+            + "where cast(\"hire_date\" as date) <= date '2015-01-01' - interval '2' minute";
+    String expected =
+        "SELECT COUNT(*) AS \"EXPR$0\", SUM(\"employee_id\") AS \"EXPR$1\"\n"
+            + "FROM \"foodmart\".\"reserve_employee\"\n"
+            + "WHERE CAST(\"hire_date\" AS DATE) <= (DATE '2015-01-01' - INTERVAL '2' MINUTE)";
+    sql(query).ok(expected);
+  }
+
   /** Fluid interface to run tests. */
   private static class Sql {
     private CalciteAssert.SchemaSpec schemaSpec;

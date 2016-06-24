@@ -69,7 +69,9 @@ public class SqlDatetimeSubtractionOperator extends SqlSpecialOperator {
     writer.sep("-");
     call.operand(1).unparse(writer, leftPrec, rightPrec);
     writer.endList(frame);
-    call.operand(2).unparse(writer, leftPrec, rightPrec);
+    if (call.operandCount() > 2) {
+      call.operand(2).unparse(writer, leftPrec, rightPrec);
+    }
   }
 
   @Override public SqlMonotonicity getMonotonicity(SqlOperatorBinding call) {
